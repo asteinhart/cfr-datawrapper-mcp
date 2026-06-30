@@ -43,6 +43,9 @@ async def test_get_chart_info_returns_simplified_type(simplified_name, api_type)
         "title": "Test Chart",
         "data": None,
     }
+    mock_chart._client = MagicMock()
+    mock_chart._client._CHARTS_URL = "https://api.datawrapper.de/v3/charts"
+    mock_chart._client.get.return_value = {"folderId": None, "teamId": None}
 
     # Mock get_chart to return our mock
     with patch("datawrapper_mcp.handlers.retrieve.get_chart", return_value=mock_chart):
@@ -74,6 +77,9 @@ async def test_get_chart_info_handles_unknown_type():
         "title": "Test Chart",
         "data": None,
     }
+    mock_chart._client = MagicMock()
+    mock_chart._client._CHARTS_URL = "https://api.datawrapper.de/v3/charts"
+    mock_chart._client.get.return_value = {"folderId": None, "teamId": None}
 
     with patch("datawrapper_mcp.handlers.retrieve.get_chart", return_value=mock_chart):
         result = await get_chart_info({"chart_id": "test123"})

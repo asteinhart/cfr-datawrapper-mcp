@@ -41,7 +41,7 @@ async def create_chart(
     chart.data = df
 
     # Create chart using Pydantic instance method
-    chart.create(access_token=token)
+    chart.create(access_token=token, folder_id=arguments.get("folder_id"))
 
     metadata: dict[str, Any] = {
         "chart_id": chart.chart_id,

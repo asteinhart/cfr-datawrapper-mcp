@@ -73,11 +73,12 @@ datawrapper_mcp/
 
 | Tool | Description |
 |------|-------------|
-| `create_chart` | Create chart with full Pydantic config |
+| `create_chart` | Create chart with full Pydantic config (accepts optional `folder_id`) |
 | `get_chart_schema` | Get JSON schema for a chart type |
-| `get_chart` | Retrieve chart info and complete configuration |
-| `update_chart` | Update chart data or configuration |
+| `get_chart` | Retrieve chart info, including `folder_id` / `team_id` / `folder_path` |
+| `update_chart` | Update chart data, config, or folder placement (accepts `folder_id`) |
 | `delete_chart` | Delete a chart |
+| `list_folders` | List all folders in the account as a flat array of `{id, name, parent_id, team_id}` |
 | `publish_chart` | Publish chart (only on explicit user request) |
 | `export_chart_png` | Export as PNG (only on explicit user request) |
 

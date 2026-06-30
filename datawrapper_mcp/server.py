@@ -17,18 +17,22 @@ from .middleware import (
     TimingMiddleware,
 )
 from .handlers import create_chart as create_chart_handler
+from .handlers import create_folder as create_folder_handler
 from .handlers import delete_chart as delete_chart_handler
 from .handlers import export_chart_png as export_chart_png_handler
 from .handlers import get_chart_info as get_chart_info_handler
 from .handlers import get_chart_schema as get_chart_schema_handler
+from .handlers import list_folders as list_folders_handler
 from .handlers import publish_chart as publish_chart_handler
 from .handlers import update_chart as update_chart_handler
 from .types import (
     CreateChartArgs,
+    CreateFolderArgs,
     DeleteChartArgs,
     ExportChartPngArgs,
     GetChartArgs,
     GetChartSchemaArgs,
+    ListFoldersArgs,
     PublishChartArgs,
     UpdateChartArgs,
 )
@@ -53,6 +57,8 @@ mcp = FastMCP(
                     "update_chart",
                     "delete_chart",
                     "export_chart_png",
+                    "list_folders",
+                    "create_folder",
                 }
             ),
         ),
@@ -156,6 +162,98 @@ async def get_chart_schema(chart_type: str) -> str:
 
 
 @mcp.tool(
+    annotations=ToolAnnotations(
+        readOnlyHint=True,
+        destructiveHint=False,
+        idempotentHint=True,
+        openWorldHint=True,
+    )
+)
+async def list_folders(access_token: str | None = None) -> str:
+    """⚠️ DATAWRAPPER MCP TOOL ⚠️
+    This is part of the Datawrapper MCP server integration.
+
+    ---
+
+    List all folders in the caller's Datawrapper account as a flat array.
+
+    Each entry has:
+    - id: Folder ID (pass to create_chart or update_chart as folder_id)
+    - name: Folder name
+    - parent_id: Parent folder ID, or null for top-level folders
+    - team_id: Team ID the folder belongs to, or null when personal
+
+    Use this to discover folder IDs before calling create_chart / update_chart
+    with a folder_id argument.
+
+    Args:
+        access_token: Optional Datawrapper API token. When provided, uses the
+                      caller's account. When omitted, falls back to the server's
+                      DATAWRAPPER_ACCESS_TOKEN env var.
+
+    Returns:
+        JSON string containing a flat list of folders.
+    """
+    arguments = cast(
+        ListFoldersArgs,
+        {**({"access_token": access_token} if access_token else {})},
+    )
+    result = await list_folders_handler(arguments)
+    return result[0].text
+
+
+@mcp.tool(
+    annotations=ToolAnnotations(
+        readOnlyHint=False,
+        destructiveHint=False,
+        idempotentHint=False,
+        openWorldHint=True,
+    )
+)
+async def create_folder(
+    name: str,
+    parent_id: int | None = None,
+    team_id: str | None = None,
+    access_token: str | None = None,
+) -> str:
+    """⚠️ DATAWRAPPER MCP TOOL ⚠️
+    This is part of the Datawrapper MCP server integration.
+
+    ---
+
+    Create a new folder in the caller's Datawrapper account.
+
+    The folder can live in the personal workspace or inside a team:
+    - Omit both parent_id and team_id → creates a top-level personal folder
+    - Pass team_id → creates a top-level folder inside that team
+    - Pass parent_id → creates a subfolder under that parent (team_id is
+      inferred from the parent, but may be passed for clarity)
+
+    Use list_folders first to look up existing parent_id / team_id values.
+
+    Args:
+        name: Name for the new folder.
+        parent_id: Optional parent folder ID. When set, creates a subfolder.
+        team_id: Optional team ID (string slug, e.g. "councilonforeignrelations").
+                 Required when creating a top-level folder in a team workspace.
+        access_token: Optional Datawrapper API token. When omitted, falls back
+                      to the server's DATAWRAPPER_ACCESS_TOKEN env var.
+
+    Returns:
+        JSON string with the new folder's id, name, parent_id, and team_id.
+    """
+    arguments: dict = {"name": name}
+    if parent_id is not None:
+        arguments["parent_id"] = parent_id
+    if team_id is not None:
+        arguments["team_id"] = team_id
+    if access_token is not None:
+        arguments["access_token"] = access_token
+    result = await create_folder_handler(cast(CreateFolderArgs, arguments))
+    return result[0].text
+
+
+@mcp.tool(
     app=True,
     annotations=ToolAnnotations(
         readOnlyHint=False,
@@ -168,6 +266,7 @@ async def create_chart(
     data: str | list | dict,
     chart_type: str,
     chart_config: dict | str,
+    folder_id: int | None = None,
     access_token: str | None = None,
 ) -> ToolResult:
     """⚠️ THIS IS THE DATAWRAPPER INTEGRATION ⚠️
@@ -250,6 +349,9 @@ async def create_chart(
         chart_type: Type of chart to create. Use list_chart_types to see all available types.
             Common types: bar, line, area, arrow, column, multiple_column, scatter, stacked_bar
         chart_config: Complete chart configuration as a Pydantic model dict
+        folder_id: Optional Datawrapper folder ID. When provided, the chart is
+                   created in that folder. When omitted, the chart lands at the
+                   account root. Use list_folders to look up folder IDs.
         access_token: Optional Datawrapper API token. When provided, charts are
                       created in the caller's account (recommended). When omitted,
                       falls back to the server's DATAWRAPPER_ACCESS_TOKEN env var.
@@ -272,6 +374,8 @@ async def create_chart(
         "chart_type": chart_type,
         "chart_config": parsed_config,
     }
+    if folder_id is not None:
+        args["folder_id"] = folder_id
     if access_token:
         args["access_token"] = access_token
     arguments = cast(CreateChartArgs, args)
@@ -419,6 +523,10 @@ async def get_chart(chart_id: str, access_token: str | None = None) -> str:
     - title: Chart title
     - type: Simplified chart type name (bar, line, stacked_bar, etc.) - same format
             as used in list_chart_types and create_chart
+    - folder_id: Folder ID the chart lives in (null when at the account root)
+    - team_id: Team ID owning the chart (null when not in a team)
+    - folder_path: Human-readable folder path (e.g. "CFR / 2026 / Cuba"), only
+                   included when the chart is inside a folder
     - config: Complete Pydantic model configuration including all styling,
               colors, axes, tooltips, annotations, and other properties
     - public_url: Public URL if published
@@ -457,6 +565,7 @@ async def update_chart(
     chart_id: str,
     data: str | list | dict | None = None,
     chart_config: dict | str | None = None,
+    folder_id: int | None = None,
     access_token: str | None = None,
 ) -> ToolResult:
     """⚠️ DATAWRAPPER MCP TOOL ⚠️
@@ -475,6 +584,8 @@ async def update_chart(
     • Title, intro, byline, source information
     • Colors, styling, axes configuration
     • Tooltips, annotations, labels
+    • Folder placement (via folder_id) — can be combined with other updates
+      or passed on its own to do a folder-only move
     • Any other configuration options for the existing chart type
 
     WHAT YOU CANNOT UPDATE:
@@ -499,6 +610,9 @@ async def update_chart(
         chart_id: ID of the chart to update
         data: New chart data (optional). Same formats as create_chart.
         chart_config: Updated chart configuration using high-level Pydantic fields (optional)
+        folder_id: Optional Datawrapper folder ID. Pass this alone to move a
+                   chart without touching data/config, or combine with the
+                   other update fields. Use list_folders to look up IDs.
         access_token: Optional Datawrapper API token. When provided, uses the
                       caller's account. When omitted, falls back to the server's
                       DATAWRAPPER_ACCESS_TOKEN env var.
@@ -521,6 +635,8 @@ async def update_chart(
         arguments["data"] = data
     if parsed_config is not None:
         arguments["chart_config"] = parsed_config
+    if folder_id is not None:
+        arguments["folder_id"] = folder_id
     if access_token:
         arguments["access_token"] = access_token
 

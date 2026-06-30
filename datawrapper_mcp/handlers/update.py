@@ -20,17 +20,21 @@ async def update_chart(
     """
     chart_id = arguments["chart_id"]
     token = arguments.get("access_token")
+    folder_id = arguments.get("folder_id")
+
+    has_data = "data" in arguments
+    has_config = "chart_config" in arguments
 
     # Get chart using factory function - returns correct Pydantic class instance
     chart = get_chart(chart_id, access_token=token)
 
     # Update data if provided
-    if "data" in arguments:
+    if has_data:
         df = json_to_dataframe(arguments["data"])
         chart.data = df
 
     # Update config if provided
-    if "chart_config" in arguments:
+    if has_config:
         # Directly set attributes on the chart instance
         # Pydantic will validate each assignment automatically due to validate_assignment=True
         try:
@@ -55,8 +59,17 @@ async def update_chart(
                 f"Only high-level Pydantic fields are accepted."
             )
 
-    # Update using Pydantic instance method
-    chart.update(access_token=token)
+    # Only call chart.update() when there's actually a data/config change.
+    # Folder-only moves go through the dedicated move_chart endpoint — there's
+    # no point issuing a redundant metadata PATCH.
+    if has_data or has_config:
+        chart.update(access_token=token)
+
+    if folder_id is not None:
+        # BaseChart.update() does not send folderId, so moves go through the
+        # dedicated PATCH endpoint. Reuse chart._client (populated by
+        # BaseChart.get) to avoid opening a second auth session.
+        chart._client.move_chart(chart_id, folder_id)
 
     metadata: dict[str, Any] = {
         "chart_id": chart.chart_id,

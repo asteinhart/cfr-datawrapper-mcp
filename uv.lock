@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 2
 requires-python = ">=3.10"
 resolution-markers = [
     "python_full_version >= '3.12' and platform_python_implementation == 'PyPy'",
@@ -592,12 +592,12 @@ test = [
 requires-dist = [
     { name = "datawrapper", specifier = ">=2.0.14" },
     { name = "exceptiongroup", marker = "python_full_version < '3.11'" },
-    { name = "fastmcp", extras = ["apps"], specifier = "==3.1.1" },
+    { name = "fastmcp", extras = ["apps"], specifier = "==3.2.4" },
     { name = "mypy", marker = "extra == 'mypy'" },
     { name = "pandas", specifier = ">=2.0.0" },
     { name = "pandas-stubs", marker = "extra == 'mypy'" },
     { name = "pre-commit", marker = "extra == 'dev'" },
-    { name = "prefab-ui", specifier = "==0.8.0" },
+    { name = "prefab-ui", specifier = "==0.18.1" },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=7.0.0" },
     { name = "pytest-asyncio", marker = "extra == 'test'", specifier = ">=0.21.0" },
     { name = "pytest-cov", marker = "extra == 'test'" },
@@ -701,12 +701,13 @@ wheels = [
 
 [[package]]
 name = "fastmcp"
-version = "3.1.1"
+version = "3.2.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "authlib" },
     { name = "cyclopts" },
     { name = "exceptiongroup" },
+    { name = "griffelib" },
     { name = "httpx" },
     { name = "jsonref" },
     { name = "jsonschema-path" },
@@ -726,9 +727,9 @@ dependencies = [
     { name = "watchfiles" },
     { name = "websockets" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/25/83/c95d3bf717698a693eccb43e137a32939d2549876e884e246028bff6ecce/fastmcp-3.1.1.tar.gz", hash = "sha256:db184b5391a31199323766a3abf3a8bfbb8010479f77eca84c0e554f18655c48", size = 17347644, upload-time = "2026-03-14T19:12:20.235Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/9c/13/29544fbc6dfe45ea38046af0067311e0bad7acc7d1f2ad38bb08f2409fe2/fastmcp-3.2.4.tar.gz", hash = "sha256:083ecb75b44a4169e7fc0f632f94b781bdb0ff877c6b35b9877cbb566fd4d4d1", size = 28746127, upload-time = "2026-04-14T01:42:24.174Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/70/ea/570122de7e24f72138d006f799768e14cc1ccf7fcb22b7750b2bd276c711/fastmcp-3.1.1-py3-none-any.whl", hash = "sha256:8132ba069d89f14566b3266919d6d72e2ec23dd45d8944622dca407e9beda7eb", size = 633754, upload-time = "2026-03-14T19:12:22.736Z" },
+    { url = "https://files.pythonhosted.org/packages/cf/76/b310d52fa0e30d39bd937eb58ec2c1f1ea1b5f519f0575e9dd9612f01deb/fastmcp-3.2.4-py3-none-any.whl", hash = "sha256:e6c9c429171041455e47ab94bb3f83c4657622a0ec28922f6940053959bd58a9", size = 728599, upload-time = "2026-04-14T01:42:26.85Z" },
 ]
 
 [package.optional-dependencies]
@@ -743,6 +744,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/58/46/0028a82567109b5ef6e4d2a1f04a583fb513e6cf9527fcdd09afd817deeb/filelock-3.20.0.tar.gz", hash = "sha256:711e943b4ec6be42e1d4e6690b48dc175c822967466bb31c0c293f34334c13f4", size = 18922, upload-time = "2025-10-08T18:03:50.056Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/76/91/7216b27286936c16f5b4d0c530087e4a54eead683e6b0b73dd0c64844af6/filelock-3.20.0-py3-none-any.whl", hash = "sha256:339b4732ffda5cd79b13f4e2711a31b0365ce445d95d243bb996273d072546a2", size = 16054, upload-time = "2025-10-08T18:03:48.35Z" },
+]
+
+[[package]]
+name = "griffelib"
+version = "2.0.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/9d/82/74f4a3310cdabfbb10da554c3a672847f1ed33c6f61dd472681ce7f1fe67/griffelib-2.0.2.tar.gz", hash = "sha256:3cf20b3bc470e83763ffbf236e0076b1211bac1bc67de13daf494640f2de707e", size = 166461, upload-time = "2026-03-27T11:34:51.091Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/11/8c/c9138d881c79aa0ea9ed83cbd58d5ca75624378b38cee225dcf5c42cc91f/griffelib-2.0.2-py3-none-any.whl", hash = "sha256:925c857658fb1ba40c0772c37acbc2ab650bd794d9c1b9726922e36ea4117ea1", size = 142357, upload-time = "2026-03-27T11:34:46.275Z" },
 ]
 
 [[package]]
@@ -1627,16 +1637,16 @@ wheels = [
 
 [[package]]
 name = "prefab-ui"
-version = "0.8.0"
+version = "0.18.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cyclopts" },
     { name = "pydantic" },
     { name = "rich" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/9e/b6/36166ce41d301e70f99172c77ad0ab818e1adb48c31cd5872aa9ba143f8a/prefab_ui-0.8.0.tar.gz", hash = "sha256:355f7c9d2ac30b5871833b505557b8747e1e9b847cfe983dc3f43eacc5e46cb3", size = 2746948, upload-time = "2026-02-25T21:48:00.392Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/5f/d2/2375b384aa1e217e38e45307a9c86d7ababcf175ea231028ed038edd89ef/prefab_ui-0.18.1.tar.gz", hash = "sha256:cc01022cec2b511c68965df8b40a6b695c485009c8e71088d2c5ba887301347d", size = 4031526, upload-time = "2026-03-30T21:04:47.654Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/54/24/fd8b0463cdaf99c3cc01b6589fa1b9773c84de0a49613b3b4c9ce1a37c71/prefab_ui-0.8.0-py3-none-any.whl", hash = "sha256:0c285eb3828a0e8c525b271741902bbe16d3aeef19fe9bcdd3b3a7df8950a29f", size = 803853, upload-time = "2026-02-25T21:47:57.756Z" },
+    { url = "https://files.pythonhosted.org/packages/d7/ab/49aee3cc6becb138a17667a6a078d16e4a837d047694b3f1f250c5b7ec19/prefab_ui-0.18.1-py3-none-any.whl", hash = "sha256:7d91d03ff0baed532b642cbfa162e041a5c232ab94e713482bec4258139d4068", size = 1840872, upload-time = "2026-03-30T21:04:46.03Z" },
 ]
 
 [[package]]

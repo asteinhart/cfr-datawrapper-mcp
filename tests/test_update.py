@@ -233,3 +233,63 @@ async def test_update_uses_direct_attribute_assignment(mock_api_token, mock_get_
 
     # Verify result indicates success
     assert "chart_id" in metadata
+
+
+@pytest.mark.asyncio
+async def test_update_with_folder_only_skips_chart_update(
+    mock_api_token, mock_get_chart
+):
+    """A folder-only update skips chart.update() and just calls move_chart."""
+    from datawrapper_mcp.handlers.update import update_chart
+
+    mock_chart = mock_get_chart.return_value
+    mock_chart.update = MagicMock()
+
+    arguments = {"chart_id": "test123", "folder_id": 99}
+
+    metadata, _images = await update_chart(arguments)
+
+    # No data/config → no metadata PATCH
+    mock_chart.update.assert_not_called()
+    # Move is issued via the dedicated endpoint on the reused client
+    mock_chart._client.move_chart.assert_called_once_with("test123", 99)
+    assert "chart_id" in metadata
+
+
+@pytest.mark.asyncio
+async def test_update_combines_config_change_with_folder_move(
+    mock_api_token, mock_get_chart
+):
+    """Passing both chart_config and folder_id runs update() and move_chart."""
+    from datawrapper_mcp.handlers.update import update_chart
+
+    mock_chart = mock_get_chart.return_value
+    mock_chart.update = MagicMock()
+
+    arguments = {
+        "chart_id": "test123",
+        "chart_config": {"title": "Renamed"},
+        "folder_id": 7,
+    }
+
+    metadata, _images = await update_chart(arguments)
+
+    assert mock_chart.title == "Renamed"
+    mock_chart.update.assert_called_once_with(access_token=None)
+    mock_chart._client.move_chart.assert_called_once_with("test123", 7)
+    assert "chart_id" in metadata
+
+
+@pytest.mark.asyncio
+async def test_update_without_folder_id_does_not_move(mock_api_token, mock_get_chart):
+    """When folder_id is absent, move_chart is never called."""
+    from datawrapper_mcp.handlers.update import update_chart
+
+    mock_chart = mock_get_chart.return_value
+    mock_chart.update = MagicMock()
+
+    arguments = {"chart_id": "test123", "chart_config": {"title": "Stay"}}
+
+    await update_chart(arguments)
+
+    mock_chart._client.move_chart.assert_not_called()
