@@ -30,6 +30,12 @@ def mock_chart():
     chart.get_editor_url.return_value = "https://app.datawrapper.de/chart/tok_test/edit"
     chart.get_public_url.return_value = "https://datawrapper.dwcdn.net/tok_test/"
     chart.export_png.return_value = b"PNG"
+    # Retrieve handler now reads folderId/teamId off the raw metadata call
+    # made through chart._client — expose a root-level response by default.
+    chart._client = MagicMock()
+    chart._client._CHARTS_URL = "https://api.datawrapper.de/v3/charts"
+    chart._client.get.return_value = {"folderId": None, "teamId": None}
+    chart._client.get_folders.return_value = {"list": []}
     return chart
 
 
@@ -56,7 +62,7 @@ async def test_create_forwards_token(mock_chart):
             }
         )
 
-    mock_chart.create.assert_called_once_with(access_token=USER_TOKEN)
+    mock_chart.create.assert_called_once_with(access_token=USER_TOKEN, folder_id=None)
     mock_preview.assert_called_once_with(mock_chart, access_token=USER_TOKEN)
 
 
@@ -80,7 +86,7 @@ async def test_create_normalizes_empty_token(mock_chart):
             }
         )
 
-    mock_chart.create.assert_called_once_with(access_token=None)
+    mock_chart.create.assert_called_once_with(access_token=None, folder_id=None)
     mock_preview.assert_called_once_with(mock_chart, access_token=None)
 
 

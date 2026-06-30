@@ -35,6 +35,10 @@ async def test_get_chart_info_returns_complete_config():
         "tooltip_number_format": "0.0",
     }
     mock_chart.model_dump.return_value = mock_config
+    mock_chart._client = MagicMock()
+    mock_chart._client._CHARTS_URL = "https://api.datawrapper.de/v3/charts"
+    mock_chart._client.get.return_value = {"folderId": None, "teamId": None}
+    mock_chart._client.get_folders.return_value = {"list": []}
 
     with patch("datawrapper_mcp.handlers.retrieve.get_chart", return_value=mock_chart):
         result = await get_chart_info({"chart_id": "test123"})
@@ -96,6 +100,10 @@ async def test_get_chart_info_config_can_be_reused():
         "tooltip_number_format": "0.00",
     }
     mock_chart.model_dump.return_value = reusable_config
+    mock_chart._client = MagicMock()
+    mock_chart._client._CHARTS_URL = "https://api.datawrapper.de/v3/charts"
+    mock_chart._client.get.return_value = {"folderId": None, "teamId": None}
+    mock_chart._client.get_folders.return_value = {"list": []}
 
     with patch("datawrapper_mcp.handlers.retrieve.get_chart", return_value=mock_chart):
         result = await get_chart_info({"chart_id": "original123"})
@@ -148,6 +156,10 @@ async def test_get_chart_info_includes_all_fields():
         "x_grid": "off",
     }
     mock_chart.model_dump.return_value = complete_config
+    mock_chart._client = MagicMock()
+    mock_chart._client._CHARTS_URL = "https://api.datawrapper.de/v3/charts"
+    mock_chart._client.get.return_value = {"folderId": None, "teamId": None}
+    mock_chart._client.get_folders.return_value = {"list": []}
 
     with patch("datawrapper_mcp.handlers.retrieve.get_chart", return_value=mock_chart):
         result = await get_chart_info({"chart_id": "test456"})
@@ -190,6 +202,10 @@ async def test_get_chart_info_with_dataframe():
         "color_category": {"A": "#ff0000"},
     }
     mock_chart.model_dump.return_value = mock_config
+    mock_chart._client = MagicMock()
+    mock_chart._client._CHARTS_URL = "https://api.datawrapper.de/v3/charts"
+    mock_chart._client.get.return_value = {"folderId": None, "teamId": None}
+    mock_chart._client.get_folders.return_value = {"list": []}
 
     with patch("datawrapper_mcp.handlers.retrieve.get_chart", return_value=mock_chart):
         result = await get_chart_info({"chart_id": "test789"})
@@ -221,6 +237,89 @@ async def test_get_chart_info_with_dataframe():
 
 
 @pytest.mark.asyncio
+async def test_get_chart_info_surfaces_folder_metadata():
+    """folder_id, team_id, and folder_path are returned when chart is in a folder."""
+    mock_chart = MagicMock()
+    mock_chart.chart_id = "inFolder"
+    mock_chart.title = "Foldered Chart"
+    mock_chart.chart_type = "bar"
+    mock_chart.get_public_url.return_value = "https://datawrapper.dwcdn.net/inFolder/"
+    mock_chart.get_editor_url.return_value = (
+        "https://app.datawrapper.de/chart/inFolder/visualize"
+    )
+    mock_chart.model_dump.return_value = {"title": "Foldered Chart"}
+
+    mock_chart._client = MagicMock()
+    mock_chart._client._CHARTS_URL = "https://api.datawrapper.de/v3/charts"
+    mock_chart._client.get.return_value = {
+        "folderId": 42,
+        "teamId": "teamX",
+    }
+    mock_chart._client.get_folders.return_value = {
+        "list": [
+            {
+                "type": "team",
+                "id": "teamX",
+                "name": "Team X",
+                "folders": [
+                    {
+                        "id": 1,
+                        "name": "CFR",
+                        "folders": [
+                            {
+                                "id": 7,
+                                "name": "2026",
+                                "folders": [
+                                    {"id": 42, "name": "Cuba", "folders": []},
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            },
+        ]
+    }
+
+    with patch("datawrapper_mcp.handlers.retrieve.get_chart", return_value=mock_chart):
+        result = await get_chart_info({"chart_id": "inFolder"})
+
+    response = json.loads(result[0].text)
+
+    assert response["folder_id"] == 42
+    assert response["team_id"] == "teamX"
+    assert response["folder_path"] == "CFR / 2026 / Cuba"
+    mock_chart._client.get_folders.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_get_chart_info_at_root_omits_folder_path():
+    """Root-level charts don't trigger a get_folders call and omit folder_path."""
+    mock_chart = MagicMock()
+    mock_chart.chart_id = "rootChart"
+    mock_chart.title = "Root Chart"
+    mock_chart.chart_type = "bar"
+    mock_chart.get_public_url.return_value = "https://datawrapper.dwcdn.net/rootChart/"
+    mock_chart.get_editor_url.return_value = (
+        "https://app.datawrapper.de/chart/rootChart/visualize"
+    )
+    mock_chart.model_dump.return_value = {"title": "Root Chart"}
+
+    mock_chart._client = MagicMock()
+    mock_chart._client._CHARTS_URL = "https://api.datawrapper.de/v3/charts"
+    mock_chart._client.get.return_value = {"folderId": None, "teamId": None}
+
+    with patch("datawrapper_mcp.handlers.retrieve.get_chart", return_value=mock_chart):
+        result = await get_chart_info({"chart_id": "rootChart"})
+
+    response = json.loads(result[0].text)
+
+    assert response["folder_id"] is None
+    assert response["team_id"] is None
+    assert "folder_path" not in response
+    mock_chart._client.get_folders.assert_not_called()
+
+
+@pytest.mark.asyncio
 async def test_get_chart_info_with_none_data():
     """Test that None data is handled correctly."""
     mock_chart = MagicMock()
@@ -239,6 +338,10 @@ async def test_get_chart_info_with_none_data():
         "color_category": {"A": "#ff0000"},
     }
     mock_chart.model_dump.return_value = mock_config
+    mock_chart._client = MagicMock()
+    mock_chart._client._CHARTS_URL = "https://api.datawrapper.de/v3/charts"
+    mock_chart._client.get.return_value = {"folderId": None, "teamId": None}
+    mock_chart._client.get_folders.return_value = {"list": []}
 
     with patch("datawrapper_mcp.handlers.retrieve.get_chart", return_value=mock_chart):
         result = await get_chart_info({"chart_id": "test999"})

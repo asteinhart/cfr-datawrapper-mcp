@@ -114,6 +114,78 @@ class TestCreateChartPreview:
 
 
 @pytest.mark.asyncio
+class TestCreateChartFolder:
+    """create_chart forwards folder_id to BaseChart.create()."""
+
+    async def test_create_forwards_folder_id(self, mock_api_token):
+        from datawrapper_mcp.handlers.create import create_chart
+
+        mock_instance = MagicMock()
+        mock_instance.chart_id = "abc123"
+        mock_instance.title = "Test Chart"
+        mock_instance.get_editor_url.return_value = (
+            "https://app.datawrapper.de/chart/abc123/edit"
+        )
+        mock_instance.export_png.return_value = b"PNG_DATA"
+
+        chart_cls = MagicMock()
+        chart_cls.model_validate.return_value = mock_instance
+        with (
+            patch(
+                "datawrapper_mcp.handlers.create.CHART_CLASSES",
+                {"bar": chart_cls},
+            ),
+            patch(
+                "datawrapper_mcp.handlers.create.json_to_dataframe",
+                return_value=MagicMock(),
+            ),
+        ):
+            arguments = {
+                "chart_type": "bar",
+                "data": [{"x": 1}],
+                "chart_config": {"title": "Test Chart"},
+                "folder_id": 314,
+            }
+
+            await create_chart(arguments)
+
+        mock_instance.create.assert_called_once_with(access_token=None, folder_id=314)
+
+    async def test_create_without_folder_id_passes_none(self, mock_api_token):
+        from datawrapper_mcp.handlers.create import create_chart
+
+        mock_instance = MagicMock()
+        mock_instance.chart_id = "abc123"
+        mock_instance.title = "Test Chart"
+        mock_instance.get_editor_url.return_value = (
+            "https://app.datawrapper.de/chart/abc123/edit"
+        )
+        mock_instance.export_png.return_value = b"PNG_DATA"
+
+        chart_cls = MagicMock()
+        chart_cls.model_validate.return_value = mock_instance
+        with (
+            patch(
+                "datawrapper_mcp.handlers.create.CHART_CLASSES",
+                {"bar": chart_cls},
+            ),
+            patch(
+                "datawrapper_mcp.handlers.create.json_to_dataframe",
+                return_value=MagicMock(),
+            ),
+        ):
+            arguments = {
+                "chart_type": "bar",
+                "data": [{"x": 1}],
+                "chart_config": {"title": "Test Chart"},
+            }
+
+            await create_chart(arguments)
+
+        mock_instance.create.assert_called_once_with(access_token=None, folder_id=None)
+
+
+@pytest.mark.asyncio
 class TestUpdateChartPreview:
     """Tests for preview integration in update_chart handler."""
 

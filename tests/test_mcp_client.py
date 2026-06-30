@@ -88,6 +88,12 @@ def mock_chart_instance():
     chart.get_editor_url.return_value = "https://app.datawrapper.de/chart/abc123/edit"
     chart.get_public_url.return_value = "https://datawrapper.dwcdn.net/abc123/"
     chart.export_png.return_value = b"PNG_FAKE_DATA"
+    # Default the raw-metadata / folder lookups used by get_chart_info
+    # and update_chart to a root-level chart.
+    chart._client = MagicMock()
+    chart._client._CHARTS_URL = "https://api.datawrapper.de/v3/charts"
+    chart._client.get.return_value = {"folderId": None, "teamId": None}
+    chart._client.get_folders.return_value = {"list": []}
     return chart
 
 

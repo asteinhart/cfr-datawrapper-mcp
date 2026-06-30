@@ -50,6 +50,16 @@ def mock_chart():
     }
     chart.get_editor_url.return_value = "https://app.datawrapper.de/chart/test123/edit"
     chart.get_public_url.return_value = "https://datawrapper.dwcdn.net/test123/"
+
+    # Expose a mocked Datawrapper client the handlers can reuse for raw
+    # metadata fetches, get_folders, and move_chart calls. Default the raw
+    # response to a root-level chart so existing tests see folder_id=None.
+    client = MagicMock()
+    client._CHARTS_URL = "https://api.datawrapper.de/v3/charts"
+    client.get.return_value = {"folderId": None, "teamId": None}
+    client.get_folders.return_value = {"list": []}
+    client.move_chart.return_value = {}
+    chart._client = client
     return chart
 
 

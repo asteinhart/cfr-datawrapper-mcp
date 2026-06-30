@@ -43,16 +43,17 @@ Here's a more complete example showing how to create, publish, update, and displ
 
 ## Tools
 
-| Tool               | Description                                        |
-| ------------------ | -------------------------------------------------- |
-| `list_chart_types` | List available chart types with descriptions       |
-| `get_chart_schema` | Get the full configuration schema for a chart type |
-| `create_chart`     | Create a new chart with data and configuration     |
-| `update_chart`     | Update an existing chart's data or styling         |
-| `publish_chart`    | Publish a chart to make it publicly accessible     |
-| `get_chart`        | Retrieve a chart's configuration and metadata      |
-| `delete_chart`     | Permanently delete a chart                         |
-| `export_chart_png` | Export a chart as a PNG image                      |
+| Tool               | Description                                             |
+| ------------------ | ------------------------------------------------------- |
+| `list_chart_types` | List available chart types with descriptions            |
+| `get_chart_schema` | Get the full configuration schema for a chart type      |
+| `create_chart`     | Create a new chart with data, configuration, and folder |
+| `update_chart`     | Update an existing chart's data, styling, or folder     |
+| `publish_chart`    | Publish a chart to make it publicly accessible          |
+| `get_chart`        | Retrieve a chart's configuration, folder, and metadata  |
+| `delete_chart`     | Permanently delete a chart                              |
+| `list_folders`     | List folders in the account (flat list with parents)    |
+| `export_chart_png` | Export a chart as a PNG image                           |
 
 ## Chart Types
 

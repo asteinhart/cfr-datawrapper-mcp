@@ -15,6 +15,7 @@ class CreateChartArgs(TypedDict):
     data: str | list[dict] | dict[str, list]
     chart_type: str
     chart_config: dict[str, Any]
+    folder_id: NotRequired[int]
     access_token: NotRequired[str]
 
 
@@ -24,6 +25,7 @@ class UpdateChartArgs(TypedDict):
     chart_id: str
     data: NotRequired[str | list[dict] | dict[str, list]]
     chart_config: NotRequired[dict[str, Any]]
+    folder_id: NotRequired[int]
     access_token: NotRequired[str]
 
 
@@ -65,4 +67,19 @@ class ExportChartPngArgs(TypedDict):
     transparent: NotRequired[bool]
     border_width: NotRequired[int]
     border_color: NotRequired[str]
+    access_token: NotRequired[str]
+
+
+class ListFoldersArgs(TypedDict):
+    """Arguments for list_folders handler."""
+
+    access_token: NotRequired[str]
+
+
+class CreateFolderArgs(TypedDict):
+    """Arguments for create_folder handler."""
+
+    name: str
+    parent_id: NotRequired[int]
+    team_id: NotRequired[str]
     access_token: NotRequired[str]
